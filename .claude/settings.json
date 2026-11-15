@@ -1,0 +1,19 @@
+{
+  "enabledPlugins": {
+    "mattpocock-skills@claude-plugins-official": false,
+    "skill-creator@claude-plugins-official": false,
+    "ui-ux-pro-max@ui-ux-pro-max-skill": false
+  },
+  "permissions": {
+    "deny": [
+      "mcp__plugin_proman_proman",
+      "mcp__claude-in-chrome",
+      "mcp__ba738a74-ed41-4211-b501-46d65a800f90",
+      "mcp__1a59c906-04da-521d-bda7-7f71b9f9e01c",
+      "mcp__29882e05-23cb-5f75-9c2d-95ba70d8644d"
+    ]
+  },
+  "env": {
+    "ENABLE_CLAUDEAI_MCP_SERVERS": "false"
+  }
+}
