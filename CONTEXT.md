@@ -24,6 +24,10 @@ _Avoid_: Pizza, portion, pâton
 **Ball weight**:
 The weight of a single dough ball, in grams.
 
+**Dough weight**:
+The combined weight of all ingredients in a dough, in grams.
+_Avoid_: Total, batch weight
+
 **By dough balls**:
 Calculating a dough from a number of dough balls and a ball weight; the flour weight follows from them.
 _Avoid_: Ball-first, portion mode
