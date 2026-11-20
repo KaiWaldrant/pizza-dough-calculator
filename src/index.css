@@ -1,0 +1,51 @@
+:root {
+  font-family: system-ui, sans-serif;
+  line-height: 1.4;
+}
+
+main {
+  max-width: 32rem;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+form > div,
+form > label {
+  display: grid;
+  gap: 0.25rem;
+  margin-bottom: 0.75rem;
+}
+
+fieldset {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+[aria-invalid="true"] {
+  outline: 2px solid crimson;
+}
+
+[aria-invalid="true"] + span {
+  color: crimson;
+}
+
+[role="note"] {
+  color: darkorange;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+th,
+td {
+  text-align: left;
+  padding: 0.25rem 0;
+}
+
+td {
+  text-align: right;
+}

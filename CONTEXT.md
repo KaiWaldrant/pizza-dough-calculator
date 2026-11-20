@@ -28,6 +28,10 @@ The weight of a single dough ball, in grams.
 The combined weight of all ingredients in a dough, in grams.
 _Avoid_: Total, batch weight
 
+**Leftover**:
+The dough left over after dividing a dough into whole dough balls, in grams.
+_Avoid_: Remainder, scrap
+
 **By dough balls**:
 Calculating a dough from a number of dough balls and a ball weight; the flour weight follows from them.
 _Avoid_: Ball-first, portion mode
