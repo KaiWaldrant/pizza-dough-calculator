@@ -24,8 +24,8 @@ const REFERENCE_HOURS = 11;
 const TIME_EXPONENT = 1.37;
 
 /** The range of a single stage the model covers; outside it the suggestion is flagged. */
-const MODEL_HOURS = { min: 2, max: 100 };
-const MODEL_TEMPERATURE = { min: 2, max: 30 };
+export const MODEL_HOURS = { min: 2, max: 100 };
+export const MODEL_TEMPERATURE = { min: 2, max: 30 };
 
 /** How much of each yeast type replaces 1 g of fresh yeast. */
 const FRESH_YEAST_EQUIVALENT: Record<YeastType, number> = {
