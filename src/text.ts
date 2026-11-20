@@ -54,6 +54,13 @@ export const text = {
     backToHistory: "Back to history",
     delete: "Delete",
     confirmDelete: "Delete this bake? This can't be undone.",
+    comments: "Comments",
+    comment: "Comment",
+    addComment: "Add comment",
+    deleteComment: "Delete comment",
+    confirmDeleteComment: "Delete this comment? This can't be undone.",
+    commentedAt: (createdAt: string) =>
+      new Date(createdAt).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" }),
     summary: {
       byDoughBalls: (ballCount: number, ballWeight: number) => `${ballCount} × ${ballWeight} g`,
       byFlour: (flourWeight: number) => `${flourWeight} g flour`,

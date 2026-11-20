@@ -18,3 +18,12 @@ export type Bake = {
 };
 
 export type NewBake = Omit<Bake, "id" | "savedAt">;
+
+/** A timestamped note the baker attaches to a Bake. Comments are never edited. */
+export type Comment = {
+  id: string;
+  bakeId: string;
+  body: string;
+  /** When the comment was added, as an ISO timestamp. */
+  createdAt: string;
+};
