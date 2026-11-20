@@ -33,11 +33,33 @@ export const text = {
     doughBallsResult: "Dough balls",
     leftover: "Leftover",
     grams: (grams: number) => `${grams} g`,
+    bakeDate: "Bake date",
+    saveBake: "Save bake",
+    bakeSaved: "Bake saved",
     errors: {
       mustBeANumber: "Enter a number",
       mustBePositive: "Must be more than 0",
       mustBeWholeNumber: "Must be a whole number",
       mustNotBeNegative: "Can't be negative",
+    },
+  },
+  navigation: { label: "Views", calculator: "Calculator", history: "History" },
+  bakes: {
+    noBakes: "No bakes saved yet.",
+    bakeOf: (bakeDate: string) => `Bake of ${bakeDate}`,
+    fermentation: "Fermentation",
+    yeastPercentage: (percentage: string, overridden: boolean) =>
+      overridden ? `${percentage}% (overridden)` : `${percentage}%`,
+    percentage: (percentage: number) => `${percentage}%`,
+    backToHistory: "Back to history",
+    delete: "Delete",
+    confirmDelete: "Delete this bake? This can't be undone.",
+    summary: {
+      byDoughBalls: (ballCount: number, ballWeight: number) => `${ballCount} × ${ballWeight} g`,
+      byFlour: (flourWeight: number) => `${flourWeight} g flour`,
+      yeast: (yeastType: string, percentage: string) => `${yeastType} ${percentage}%`,
+      fermentationStage: (hours: number, temperature: number) => `${hours} h @ ${temperature} °C`,
+      separator: " · ",
     },
   },
 } as const;

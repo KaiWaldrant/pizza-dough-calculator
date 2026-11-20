@@ -65,6 +65,10 @@ A yeast baker's percentage the baker entered in place of the suggested yeast.
 One dough the baker made: a saved snapshot of its formula, fermentation, yeast type and resulting ingredient weights, plus its comments.
 _Avoid_: Attempt, batch, recipe
 
+**Bake date**:
+The day the baker made the dough of a bake. It defaults to the day the bake is saved, and the baker can pick another.
+_Avoid_: Created date
+
 **Comment**:
 A timestamped note the baker attaches to a bake, e.g. how the dough behaved or how the pizza turned out.
 _Avoid_: Note, review

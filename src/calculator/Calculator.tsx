@@ -1,7 +1,10 @@
-import { useId, useState } from "react";
+import { useId, useRef, useState } from "react";
 import { calculateDough, type DoughInput, type InputError } from "../dough/calculateDough";
+import { formatPercentage } from "../dough/formatPercentage";
 import { roundForDisplay } from "../dough/roundForDisplay";
+import type { Bake, NewBake } from "../bakes/bake";
 import { text } from "../text";
+import { Results } from "./Results";
 import { MODEL_HOURS, MODEL_TEMPERATURE, suggestYeast, type YeastType } from "../yeast/suggestYeast";
 
 const t = text.calculator;
@@ -27,33 +30,66 @@ const defaults: Fields = {
   temperature: "20",
 };
 
+/** The form as a saved Bake left it, so the baker can carry on from their last dough. */
+const fieldsFrom = ({ input, fermentation }: Bake): Fields => ({
+  ...defaults,
+  ...(input.mode === "byDoughBalls"
+    ? { ballCount: String(input.ballCount), ballWeight: String(input.ballWeight) }
+    : {
+        flourWeight: String(input.flourWeight),
+        ballWeight: input.ballWeight === undefined ? "" : String(input.ballWeight),
+      }),
+  hydration: String(input.percentages.hydration),
+  salt: String(input.percentages.salt),
+  // The calculator describes fermentation as a single stage.
+  hours: fermentation[0] ? String(fermentation[0].hours) : defaults.hours,
+  temperature: fermentation[0] ? String(fermentation[0].temperature) : defaults.temperature,
+});
+
 type Mode = DoughInput["mode"];
 type ErrorReason = InputError["reason"];
 /** Which input each error belongs to: a form field, or the yeast field. */
 type FieldErrors = Partial<Record<keyof Fields | "yeast", ErrorReason>>;
 
+/** Today's date in the baker's time zone, as "YYYY-MM-DD". */
+const today = () => {
+  const now = new Date();
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+};
+
 const toNumber = (value: string) => (value.trim() === "" ? Number.NaN : Number(value));
 
-// Two significant digits keep very small suggestions (e.g. 0.00050%) from rounding to nothing.
-const formatPercentage = (percentage: number) => String(Number(percentage.toPrecision(2)));
-
-export function Calculator() {
-  const [mode, setMode] = useState<Mode>("byDoughBalls");
-  const [fields, setFields] = useState(defaults);
-  const [yeastType, setYeastType] = useState<YeastType>("fresh");
+export function Calculator({
+  startingBake,
+  onSave,
+}: {
+  /** The Bake whose formula the form starts from; the defaults are used without one. */
+  startingBake?: Bake;
+  onSave?: (bake: NewBake) => Promise<void>;
+}) {
+  const [mode, setMode] = useState<Mode>(startingBake?.input.mode ?? "byDoughBalls");
+  const [fields, setFields] = useState(() => (startingBake ? fieldsFrom(startingBake) : defaults));
+  const [yeastType, setYeastType] = useState<YeastType>(startingBake?.yeastType ?? "fresh");
   /** The yeast % the baker typed in place of the suggestion, or null to use the suggestion. */
-  const [overriddenYeast, setOverriddenYeast] = useState<string | null>(null);
-
-  const suggestion = suggestYeast(
-    [{ hours: toNumber(fields.hours), temperature: toNumber(fields.temperature) }],
-    yeastType,
+  const [overriddenYeast, setOverriddenYeast] = useState<string | null>(
+    startingBake?.yeastOverridden ? String(startingBake.input.percentages.yeast) : null,
   );
+  const [bakeDate, setBakeDate] = useState(today);
+  /** The form as it was last saved, so "Bake saved" clears and Save re-enables on the next edit. */
+  const [savedForm, setSavedForm] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  // A ref, unlike state, already blocks the second click of a double-click.
+  const savingRef = useRef(false);
+
+  const fermentation = [{ hours: toNumber(fields.hours), temperature: toNumber(fields.temperature) }];
+  const suggestion = suggestYeast(fermentation, yeastType);
   const suggestedYeast = suggestion.ok ? formatPercentage(suggestion.percentage) : "";
   const yeast =
     overriddenYeast !== null ? toNumber(overriddenYeast) : suggestion.ok ? suggestion.percentage : Number.NaN;
 
   const percentages = { hydration: toNumber(fields.hydration), salt: toNumber(fields.salt), yeast };
-  const result = calculateDough(
+  const input: DoughInput =
     mode === "byDoughBalls"
       ? {
           mode,
@@ -67,8 +103,8 @@ export function Calculator() {
           // The ball weight is optional here: leave it empty to skip counting dough balls.
           ballWeight: fields.ballWeight.trim() === "" ? undefined : toNumber(fields.ballWeight),
           percentages,
-        },
-  );
+        };
+  const result = calculateDough(input);
 
   const errors: FieldErrors = {};
   if (!suggestion.ok) {
@@ -83,6 +119,11 @@ export function Calculator() {
       errors[error.field] ??= error.reason;
     }
   }
+
+  const form = JSON.stringify({ mode, fields, yeastType, overriddenYeast, bakeDate });
+  const saved = savedForm === form;
+  // The snapshot stores the fermentation too, so it must be valid even when the yeast is overridden.
+  const canSave = result.ok && suggestion.ok && bakeDate !== "" && !saving && !saved;
 
   const numberField = (name: keyof Fields, label: string) => (
     <NumberField
@@ -145,6 +186,35 @@ export function Calculator() {
       )}
 
       {result.ok && <Results weights={roundForDisplay(result.weights)} />}
+
+      {onSave && (
+        <p>
+          <label>
+            {t.bakeDate}
+            <input type="date" value={bakeDate} onChange={(event) => setBakeDate(event.target.value)} />
+          </label>{" "}
+          <button
+            type="button"
+            disabled={!canSave}
+            onClick={async () => {
+              if (!canSave || !result.ok || savingRef.current) return;
+              savingRef.current = true;
+              setSaving(true);
+              try {
+                const yeastOverridden = overriddenYeast !== null;
+                await onSave({ bakeDate, input, fermentation, yeastType, yeastOverridden, weights: result.weights });
+                setSavedForm(form);
+              } finally {
+                savingRef.current = false;
+                setSaving(false);
+              }
+            }}
+          >
+            {t.saveBake}
+          </button>{" "}
+          <span role="status">{saved && t.bakeSaved}</span>
+        </p>
+      )}
     </form>
   );
 }
@@ -171,47 +241,5 @@ function NumberField(props: {
       />
       {props.error && <span id={errorId}>{t.errors[props.error]}</span>}
     </div>
-  );
-}
-
-function Results({ weights }: { weights: ReturnType<typeof roundForDisplay> }) {
-  const rows: [string, number][] = [
-    [t.flour, weights.flour],
-    [t.water, weights.water],
-    [t.saltResult, weights.salt],
-    [t.yeastResult, weights.yeast],
-    [t.doughWeight, weights.doughWeight],
-  ];
-  const { doughBalls } = weights;
-  return (
-    <table>
-      <caption>{t.results}</caption>
-      <thead>
-        <tr>
-          <th scope="col">{t.ingredient}</th>
-          <th scope="col">{t.weight}</th>
-        </tr>
-      </thead>
-      <tbody>
-        {rows.map(([label, grams]) => (
-          <tr key={label}>
-            <th scope="row">{label}</th>
-            <td>{t.grams(grams)}</td>
-          </tr>
-        ))}
-        {doughBalls && (
-          <>
-            <tr>
-              <th scope="row">{t.doughBallsResult}</th>
-              <td>{doughBalls.count}</td>
-            </tr>
-            <tr>
-              <th scope="row">{t.leftover}</th>
-              <td>{t.grams(doughBalls.leftover)}</td>
-            </tr>
-          </>
-        )}
-      </tbody>
-    </table>
   );
 }
