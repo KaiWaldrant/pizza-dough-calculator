@@ -42,8 +42,12 @@ _Avoid_: Flour-first, batch mode
 The form of yeast used: fresh, active dry, or instant dry. The type changes how much yeast is needed for the same fermentation.
 
 **Fermentation**:
-The single period the dough rises before baking, described by its duration in hours and its temperature in °C.
+The time the dough rises before baking, made of one or more fermentation stages. For now a baker describes it as a single stage.
 _Avoid_: Proof, rise, retard
+
+**Fermentation stage**:
+One period of fermentation at a steady temperature, described by its duration in hours and its temperature in °C.
+_Avoid_: Phase, step
 
 **Suggested yeast**:
 The yeast baker's percentage the calculator derives from the fermentation and yeast type.

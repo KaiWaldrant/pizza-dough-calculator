@@ -7,7 +7,7 @@ To suggest a yeast percentage from fermentation time and temperature, we use a c
 - Fresh yeast % = `0.2 · (11 / h)^1.37`
 - Instant dry = fresh ÷ 3; active dry = instant dry × 1.25
 
-Spot checks against the table: 24 h at 21 °C → 0.069% (table about 0.07%); 48 h at 4 °C → 0.88% (table about 0.9%).
+Spot checks against the table: 24 h at 21 °C → 0.069% (table about 0.07%); 48 h at 4 °C → 0.87% (table about 0.9%).
 
 ## Considered Options
 
