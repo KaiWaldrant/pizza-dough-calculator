@@ -1,13 +1,15 @@
-import { render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { IDBFactory } from "fake-indexeddb";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { App } from "./App";
 import type { NewBake } from "./bakes/bake";
 import { openBakeRepository } from "./bakes/bakeRepository";
+import { tickingClock } from "./bakes/tickingClock";
 import { text } from "./text";
 
-const newRepository = () => openBakeRepository(new IDBFactory());
+/** A repository on a fresh database whose clock ticks a minute per save, so ordering is deterministic. */
+const newRepository = () => openBakeRepository(new IDBFactory(), { now: tickingClock() });
 
 async function setField(label: string, value: string) {
   const input = await screen.findByLabelText(label);
@@ -19,8 +21,9 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-async function openSavedBake(repository = newRepository()) {
-  await repository.save(savedBake);
+async function openSavedBake(repository = newRepository(), comments: string[] = []) {
+  const bake = await repository.save(savedBake);
+  for (const comment of comments) await repository.addComment(bake.id, comment);
   render(<App repository={repository} />);
   await userEvent.click(await screen.findByRole("button", { name: "History" }));
   await userEvent.click(await screen.findByRole("button", { name: /2026-11-01/ }));
@@ -120,10 +123,68 @@ describe("App", () => {
     expect(screen.getByRole("region", { name: "Bake of 2026-11-01" })).toBeDefined();
   });
 
+  it("adds comments to a Bake and shows them oldest first", async () => {
+    const detail = await openSavedBake();
+
+    await userEvent.type(within(detail).getByLabelText("Comment"), "slack at 6 h");
+    await userEvent.click(within(detail).getByRole("button", { name: "Add comment" }));
+    await userEvent.type(within(detail).getByLabelText("Comment"), "great oven spring");
+    await userEvent.click(within(detail).getByRole("button", { name: "Add comment" }));
+
+    await waitFor(() =>
+      expect(commentsIn(detail)).toEqual([
+        expect.stringContaining("slack at 6 h"),
+        expect.stringContaining("great oven spring"),
+      ]),
+    );
+    expect((within(detail).getByLabelText("Comment") as HTMLTextAreaElement).value).toBe("");
+  });
+
+  it("deletes a comment once the baker confirms", async () => {
+    const confirm = vi.spyOn(window, "confirm").mockReturnValue(true);
+    const repository = newRepository();
+    const detail = await openSavedBake(repository, ["slack at 6 h", "typo"]);
+    await waitFor(() => expect(commentsIn(detail)).toHaveLength(2));
+
+    const typo = within(detail).getAllByRole("listitem")[1]!;
+    await userEvent.click(within(typo).getByRole("button", { name: "Delete comment" }));
+
+    expect(confirm).toHaveBeenCalledWith("Delete this comment? This can't be undone.");
+    await waitFor(() => expect(commentsIn(detail)).toEqual([expect.stringContaining("slack at 6 h")]));
+  });
+
+  it("deletes two comments clicked in quick succession", async () => {
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+    const detail = await openSavedBake(newRepository(), ["first", "second"]);
+    await waitFor(() => expect(commentsIn(detail)).toHaveLength(2));
+
+    const [first, second] = within(detail).getAllByRole("button", { name: "Delete comment" });
+    fireEvent.click(first!);
+    fireEvent.click(second!);
+
+    await waitFor(() => expect(commentsIn(detail)).toEqual([]));
+  });
+
+  it("keeps a comment when the baker cancels the delete", async () => {
+    vi.spyOn(window, "confirm").mockReturnValue(false);
+    const detail = await openSavedBake(newRepository(), ["slack at 6 h"]);
+    await waitFor(() => expect(commentsIn(detail)).toHaveLength(1));
+
+    await userEvent.click(within(detail).getByRole("button", { name: "Delete comment" }));
+
+    expect(commentsIn(detail)).toHaveLength(1);
+  });
+
+  it("doesn't add a blank comment", async () => {
+    const detail = await openSavedBake();
+
+    await userEvent.type(within(detail).getByLabelText("Comment"), "   ");
+
+    expect((within(detail).getByRole("button", { name: "Add comment" }) as HTMLButtonElement).disabled).toBe(true);
+  });
+
   it("opens the calculator with the most recently saved Bake's formula, even if it has an older bake date", async () => {
-    let minute = 0;
-    const now = () => new Date(Date.UTC(2026, 10, 20, 12, minute++));
-    const repository = openBakeRepository(new IDBFactory(), { now });
+    const repository = newRepository();
     await repository.save({ ...savedBake, bakeDate: "2026-11-15" });
     await repository.save({
       ...savedBake,
@@ -150,9 +211,7 @@ describe("App", () => {
 
   it("opens the calculator with the next most recent Bake once the latest is deleted", async () => {
     vi.spyOn(window, "confirm").mockReturnValue(true);
-    let minute = 0;
-    const now = () => new Date(Date.UTC(2026, 10, 20, 12, minute++));
-    const repository = openBakeRepository(new IDBFactory(), { now });
+    const repository = newRepository();
     const withHydration = (bakeDate: string, hydration: number): NewBake => ({
       ...savedBake,
       bakeDate,
@@ -216,4 +275,9 @@ const savedBake: NewBake = {
 function resultIn(container: HTMLElement, ingredient: string) {
   const row = within(container).getByRole("row", { name: new RegExp(`^${ingredient}`) });
   return within(row).getAllByRole("cell").at(-1)?.textContent;
+}
+
+function commentsIn(detail: HTMLElement) {
+  const list = within(detail).queryByRole("list", { name: "Comments" });
+  return list ? within(list).getAllByRole("listitem").map((comment) => comment.textContent) : [];
 }

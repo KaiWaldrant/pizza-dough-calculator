@@ -3,6 +3,7 @@ import { roundForDisplay } from "../dough/roundForDisplay";
 import { Results } from "../calculator/Results";
 import { text } from "../text";
 import type { BakeRepository } from "./bakeRepository";
+import { Comments } from "./Comments";
 import { useLoad } from "../useLoad";
 
 const t = text.bakes;
@@ -45,6 +46,7 @@ export function BakeDetail(props: { repository: BakeRepository; id: string; onBa
         ))}
       </dl>
       <Results weights={roundForDisplay(weights)} />
+      <Comments key={bake.id} repository={repository} bakeId={bake.id} />
       <p>
         <button type="button" onClick={props.onBack}>
           {t.backToHistory}

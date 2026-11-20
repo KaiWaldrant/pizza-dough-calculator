@@ -2,6 +2,7 @@ import { IDBFactory } from "fake-indexeddb";
 import { describe, expect, it } from "vitest";
 import type { NewBake } from "./bake";
 import { openBakeRepository } from "./bakeRepository";
+import { tickingClock } from "./tickingClock";
 
 const newBake = (overrides: Partial<NewBake> = {}): NewBake => ({
   bakeDate: "2026-11-20",
@@ -30,9 +31,7 @@ describe("openBakeRepository", () => {
   });
 
   it("lists Bakes newest bake date first, then most recently saved first on the same date", async () => {
-    let minute = 0;
-    const now = () => new Date(Date.UTC(2026, 10, 20, 12, minute++));
-    const repository = openBakeRepository(new IDBFactory(), { now });
+    const repository = openBakeRepository(new IDBFactory(), { now: tickingClock() });
     const older = await repository.save(newBake({ bakeDate: "2026-10-01" }));
     const newest = await repository.save(newBake({ bakeDate: "2026-11-15" }));
     const sameDayFirst = await repository.save(newBake({ bakeDate: "2026-11-01" }));
@@ -62,4 +61,101 @@ describe("openBakeRepository", () => {
 
     expect(await reopened.list()).toEqual([saved]);
   });
+
+  describe("comments", () => {
+    it("lists a Bake's comments oldest first, with their creation time", async () => {
+      const repository = openBakeRepository(new IDBFactory(), { now: tickingClock() });
+      const bake = await repository.save(newBake());
+      const other = await repository.save(newBake());
+      await repository.addComment(bake.id, "slack at 6 h");
+      await repository.addComment(other.id, "on another bake");
+      await repository.addComment(bake.id, "great oven spring");
+
+      const comments = await repository.listComments(bake.id);
+
+      expect(comments.map(({ body, createdAt }) => ({ body, createdAt }))).toEqual([
+        { body: "slack at 6 h", createdAt: "2026-11-20T12:02:00.000Z" },
+        { body: "great oven spring", createdAt: "2026-11-20T12:04:00.000Z" },
+      ]);
+    });
+
+    it("deletes a comment", async () => {
+      const repository = openBakeRepository(new IDBFactory());
+      const bake = await repository.save(newBake());
+      const kept = await repository.addComment(bake.id, "slack at 6 h");
+      const deleted = await repository.addComment(bake.id, "typo");
+
+      await repository.deleteComment(deleted.id);
+
+      expect(await repository.listComments(bake.id)).toEqual([kept]);
+    });
+
+    it("deletes a Bake's comments together with the Bake", async () => {
+      const repository = openBakeRepository(new IDBFactory());
+      const bake = await repository.save(newBake());
+      const other = await repository.save(newBake());
+      await repository.addComment(bake.id, "slack at 6 h");
+      const kept = await repository.addComment(other.id, "on another bake");
+
+      await repository.delete(bake.id);
+
+      expect(await repository.listComments(bake.id)).toEqual([]);
+      expect(await repository.listComments(other.id)).toEqual([kept]);
+    });
+
+    it("keeps comments when the repository is opened again, as after a page reload", async () => {
+      const factory = new IDBFactory();
+      const repository = openBakeRepository(factory);
+      const bake = await repository.save(newBake());
+      const comment = await repository.addComment(bake.id, "great oven spring");
+
+      expect(await openBakeRepository(factory).listComments(bake.id)).toEqual([comment]);
+    });
+  });
+
+  describe("database upgrades", () => {
+    it("keeps the Bakes of a version 1 database and adds comments to them", async () => {
+      const factory = new IDBFactory();
+      const v1 = await openRaw(factory, 1, (database) => database.createObjectStore("bakes", { keyPath: "id" }));
+      const v1Bake = { ...newBake(), id: "v1-bake", savedAt: "2026-11-01T12:00:00.000Z" };
+      await new Promise((resolve) => {
+        const transaction = v1.transaction("bakes", "readwrite");
+        transaction.objectStore("bakes").add(v1Bake);
+        transaction.oncomplete = resolve;
+      });
+      v1.close();
+
+      const repository = openBakeRepository(factory);
+      const comment = await repository.addComment("v1-bake", "from before comments existed");
+
+      expect(await repository.list()).toEqual([v1Bake]);
+      expect(await repository.listComments("v1-bake")).toEqual([comment]);
+    });
+
+    it("fails instead of waiting forever when another tab keeps an older version open", async () => {
+      const factory = new IDBFactory();
+      await openRaw(factory, 1, (database) => database.createObjectStore("bakes", { keyPath: "id" }));
+
+      await expect(openBakeRepository(factory).list()).rejects.toThrow();
+    });
+
+    it("lets another tab upgrade the database to a newer version", async () => {
+      const factory = new IDBFactory();
+      await openBakeRepository(factory).list();
+
+      const newer = await openRaw(factory, 3);
+
+      expect(newer.version).toBe(3);
+    });
+  });
 });
+
+/** Opens the database directly, standing in for another tab or an older version of the app. */
+function openRaw(factory: IDBFactory, version: number, upgrade?: (database: IDBDatabase) => void) {
+  return new Promise<IDBDatabase>((resolve, reject) => {
+    const opening = factory.open("pizza-dough", version);
+    opening.onupgradeneeded = () => upgrade?.(opening.result);
+    opening.onsuccess = () => resolve(opening.result);
+    opening.onerror = () => reject(opening.error);
+  });
+}
