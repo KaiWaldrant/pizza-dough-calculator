@@ -52,6 +52,7 @@ export const text = {
       overridden ? `${percentage}% (overridden)` : `${percentage}%`,
     percentage: (percentage: number) => `${percentage}%`,
     backToHistory: "Back to history",
+    bakeAgain: "Bake again",
     delete: "Delete",
     confirmDelete: "Delete this bake? This can't be undone.",
     comments: "Comments",

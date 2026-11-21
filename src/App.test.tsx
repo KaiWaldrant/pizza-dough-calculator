@@ -183,6 +183,70 @@ describe("App", () => {
     expect((within(detail).getByRole("button", { name: "Add comment" }) as HTMLButtonElement).disabled).toBe(true);
   });
 
+  describe("Bake again", () => {
+    /** Saves an older Bake to bake again, then a newer one, so the calculator's usual start differs. */
+    async function bakeAgain(older: NewBake) {
+      const repository = newRepository();
+      await repository.save(older);
+      await repository.save({
+        ...savedBake,
+        bakeDate: "2026-11-15",
+        input: { mode: "byFlour", flourWeight: 1500, percentages: { hydration: 70, salt: 2, yeast: 0.2 } },
+        yeastType: "activeDry",
+      });
+      render(<App repository={repository} />);
+      await userEvent.click(await screen.findByRole("button", { name: "History" }));
+      await userEvent.click(await screen.findByRole("button", { name: /2026-11-01/ }));
+      await userEvent.click(await screen.findByRole("button", { name: "Bake again" }));
+      await screen.findByLabelText("Hydration (%)");
+      return repository;
+    }
+
+    it("loads the Bake's formula with an overridden yeast as an override", async () => {
+      await bakeAgain(savedBake);
+
+      expect((screen.getByRole("radio", { name: "By dough balls" }) as HTMLInputElement).checked).toBe(true);
+      expect(valueOf("Dough balls")).toBe("4");
+      expect(valueOf("Ball weight (g)")).toBe("250");
+      expect(valueOf("Hydration (%)")).toBe("62");
+      expect(valueOf("Salt (%)")).toBe("3");
+      expect(valueOf("Yeast type")).toBe("fresh");
+      expect(valueOf("Fermentation (h)")).toBe("24");
+      expect(valueOf("Temperature (°C)")).toBe("20");
+      expect(valueOf("Yeast (%)")).toBe("0.07");
+      expect(screen.getByText("Overridden")).toBeDefined();
+    });
+
+    it("uses the current suggested yeast when the Bake's yeast wasn't overridden", async () => {
+      // Stored as 0.5%, but fresh yeast for 24 h at 20 °C is suggested at 0.084% today.
+      await bakeAgain({
+        ...savedBake,
+        input: { ...savedBake.input, percentages: { hydration: 62, salt: 3, yeast: 0.5 } },
+        yeastOverridden: false,
+      });
+
+      expect(valueOf("Yeast (%)")).toBe("0.084");
+      expect(screen.queryByText("Overridden")).toBeNull();
+    });
+
+    it("saves a new Bake and leaves the original unchanged", async () => {
+      const repository = await bakeAgain(savedBake);
+      const [, original] = await repository.list();
+
+      await setField("Hydration (%)", "65");
+      await userEvent.click(screen.getByRole("button", { name: "Save bake" }));
+      await screen.findByText("Bake saved");
+
+      const bakes = await repository.list();
+      expect(bakes).toHaveLength(3);
+      expect(bakes).toContainEqual(original);
+      const added = bakes.find((bake) => bake.id !== original?.id && bake.bakeDate !== "2026-11-15");
+      expect(added?.input.percentages.hydration).toBe(65);
+      // The bake date starts again at today, not at the original's bake date ("en-CA" formats as YYYY-MM-DD).
+      expect(added?.bakeDate).toBe(new Date().toLocaleDateString("en-CA"));
+    });
+  });
+
   it("opens the calculator with the most recently saved Bake's formula, even if it has an older bake date", async () => {
     const repository = newRepository();
     await repository.save({ ...savedBake, bakeDate: "2026-11-15" });

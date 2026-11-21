@@ -2,6 +2,7 @@ import { formatPercentage } from "../dough/formatPercentage";
 import { roundForDisplay } from "../dough/roundForDisplay";
 import { Results } from "../calculator/Results";
 import { text } from "../text";
+import type { Bake } from "./bake";
 import type { BakeRepository } from "./bakeRepository";
 import { Comments } from "./Comments";
 import { useLoad } from "../useLoad";
@@ -10,7 +11,13 @@ const t = text.bakes;
 const c = text.calculator;
 
 /** A saved Bake, read-only: its formula can never be edited after saving. */
-export function BakeDetail(props: { repository: BakeRepository; id: string; onBack: () => void }) {
+export function BakeDetail(props: {
+  repository: BakeRepository;
+  id: string;
+  onBack: () => void;
+  /** Loads the Bake's formula into the calculator; the Bake itself is never changed. */
+  onBakeAgain: (bake: Bake) => void;
+}) {
   const { repository, id } = props;
   const bake = useLoad(() => repository.get(id), [repository, id]);
 
@@ -50,6 +57,9 @@ export function BakeDetail(props: { repository: BakeRepository; id: string; onBa
       <p>
         <button type="button" onClick={props.onBack}>
           {t.backToHistory}
+        </button>{" "}
+        <button type="button" onClick={() => props.onBakeAgain(bake)}>
+          {t.bakeAgain}
         </button>{" "}
         <button
           type="button"
