@@ -3,7 +3,8 @@ import userEvent from "@testing-library/user-event";
 import { IDBFactory } from "fake-indexeddb";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { App } from "./App";
-import type { NewBake } from "./bakes/bake";
+import type { Bake, NewBake } from "./bakes/bake";
+import { parseBackup } from "./bakes/backup";
 import { openBakeRepository } from "./bakes/bakeRepository";
 import { tickingClock } from "./bakes/tickingClock";
 import { text } from "./text";
@@ -244,6 +245,74 @@ describe("App", () => {
       expect(added?.input.percentages.hydration).toBe(65);
       // The bake date starts again at today, not at the original's bake date ("en-CA" formats as YYYY-MM-DD).
       expect(added?.bakeDate).toBe(new Date().toLocaleDateString("en-CA"));
+    });
+  });
+
+  describe("export and import", () => {
+    /** A backup file from another browser: the given Bake plus two new ones, one with a comment. */
+    async function backupFileWith(shared: Bake) {
+      const other = newRepository();
+      await other.importBackup({ schemaVersion: 1, bakes: [shared], comments: [] });
+      const added = await other.save({ ...savedBake, bakeDate: "2026-11-08" });
+      await other.save({ ...savedBake, bakeDate: "2026-11-15" });
+      await other.addComment(added.id, "great oven spring");
+      return new File([JSON.stringify(await other.exportBackup())], "backup.json", { type: "application/json" });
+    }
+
+    it("imports a backup, merging it into the history", async () => {
+      const repository = newRepository();
+      const existing = await repository.save(savedBake);
+      render(<App repository={repository} />);
+      await userEvent.click(await screen.findByRole("button", { name: "History" }));
+
+      await userEvent.upload(await screen.findByLabelText("Import"), await backupFileWith(existing));
+
+      expect(await screen.findByText("Added 2 bakes and 1 comment, skipped 1 bake.")).toBeDefined();
+      await waitFor(() => expect(screen.getAllByRole("listitem")).toHaveLength(3));
+    });
+
+    it("rejects a malformed file and leaves the history unchanged", async () => {
+      const repository = newRepository();
+      await repository.save(savedBake);
+      render(<App repository={repository} />);
+      await userEvent.click(await screen.findByRole("button", { name: "History" }));
+
+      await userEvent.upload(await screen.findByLabelText("Import"), new File(["not json {"], "backup.json"));
+
+      expect(await screen.findByText("This file isn't a Bake history backup. Nothing was imported.")).toBeDefined();
+      expect(await repository.list()).toHaveLength(1);
+    });
+
+    it("says so when the export fails", async () => {
+      const repository = { ...newRepository(), exportBackup: () => Promise.reject(new Error("IndexedDB unavailable")) };
+      render(<App repository={repository} />);
+      await userEvent.click(await screen.findByRole("button", { name: "History" }));
+
+      await userEvent.click(await screen.findByRole("button", { name: "Export" }));
+
+      expect(await screen.findByText("The export failed.")).toBeDefined();
+    });
+
+    it("exports the history as a JSON file that imports back", async () => {
+      const repository = newRepository();
+      const saved = await repository.save(savedBake);
+      await repository.addComment(saved.id, "slack at 6 h");
+      let exported: Blob | undefined;
+      vi.spyOn(URL, "createObjectURL").mockImplementation((blob) => {
+        exported = blob as Blob;
+        return "blob:backup";
+      });
+      vi.spyOn(URL, "revokeObjectURL").mockImplementation(() => {});
+      vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
+      render(<App repository={repository} />);
+      await userEvent.click(await screen.findByRole("button", { name: "History" }));
+
+      await userEvent.click(await screen.findByRole("button", { name: "Export" }));
+
+      await waitFor(() => expect(exported).toBeDefined());
+      const parsed = parseBackup(await exported!.text());
+      expect(parsed.ok && parsed.backup.bakes).toEqual([saved]);
+      expect(parsed.ok && parsed.backup.comments.map(({ body }) => body)).toEqual(["slack at 6 h"]);
     });
   });
 

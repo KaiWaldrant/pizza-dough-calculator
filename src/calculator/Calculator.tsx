@@ -4,6 +4,7 @@ import { formatPercentage } from "../dough/formatPercentage";
 import { roundForDisplay } from "../dough/roundForDisplay";
 import type { Bake, NewBake } from "../bakes/bake";
 import { text } from "../text";
+import { today } from "../today";
 import { Results } from "./Results";
 import { MODEL_HOURS, MODEL_TEMPERATURE, suggestYeast, type YeastType } from "../yeast/suggestYeast";
 
@@ -50,13 +51,6 @@ type Mode = DoughInput["mode"];
 type ErrorReason = InputError["reason"];
 /** Which input each error belongs to: a form field, or the yeast field. */
 type FieldErrors = Partial<Record<keyof Fields | "yeast", ErrorReason>>;
-
-/** Today's date in the baker's time zone, as "YYYY-MM-DD". */
-const today = () => {
-  const now = new Date();
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
-};
 
 const toNumber = (value: string) => (value.trim() === "" ? Number.NaN : Number(value));
 

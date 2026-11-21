@@ -1,4 +1,5 @@
 import type { Bake, Comment, NewBake } from "./bake";
+import { type Backup, type ImportResult, SCHEMA_VERSION } from "./backup";
 
 /** Stores Bakes and their Comments; the only code that knows they live in IndexedDB. */
 export interface BakeRepository {
@@ -12,6 +13,13 @@ export interface BakeRepository {
   /** Oldest first. */
   listComments(bakeId: string): Promise<Comment[]>;
   deleteComment(id: string): Promise<void>;
+  /** The whole history: every Bake and every Comment. */
+  exportBackup(): Promise<Backup>;
+  /**
+   * Merges a backup into the history in one transaction: Bakes that already exist are skipped,
+   * and Comments that don't exist yet are added, also on Bakes that were skipped.
+   */
+  importBackup(backup: Backup): Promise<ImportResult>;
 }
 
 const DATABASE_NAME = "pizza-dough";
@@ -73,6 +81,45 @@ export function openBakeRepository(
     },
     async deleteComment(id) {
       await request((await store(COMMENTS, "readwrite")).delete(id));
+    },
+    async exportBackup() {
+      // One transaction, so the Bakes and Comments are read as one consistent snapshot.
+      const transaction = (await open()).transaction([BAKES, COMMENTS], "readonly");
+      const [bakes, comments] = await Promise.all([
+        request<Bake[]>(transaction.objectStore(BAKES).getAll()),
+        request<Comment[]>(transaction.objectStore(COMMENTS).getAll()),
+      ]);
+      return { schemaVersion: SCHEMA_VERSION, bakes, comments };
+    },
+    async importBackup(backup) {
+      const transaction = (await open()).transaction([BAKES, COMMENTS], "readwrite");
+      const bakes = transaction.objectStore(BAKES);
+      const comments = transaction.objectStore(COMMENTS);
+      const result: ImportResult = { bakesAdded: 0, bakesSkipped: 0, commentsAdded: 0 };
+      // Writing inside the handlers keeps the transaction active; an await here could let it close.
+      const bakeIds = bakes.getAllKeys();
+      bakeIds.onsuccess = () => {
+        const existingBakes = new Set(bakeIds.result);
+        const commentIds = comments.getAllKeys();
+        commentIds.onsuccess = () => {
+          const existingComments = new Set(commentIds.result);
+          for (const bake of backup.bakes) {
+            if (existingBakes.has(bake.id)) {
+              result.bakesSkipped++;
+            } else {
+              bakes.add(bake);
+              result.bakesAdded++;
+            }
+          }
+          for (const comment of backup.comments) {
+            if (existingComments.has(comment.id)) continue;
+            comments.add(comment);
+            result.commentsAdded++;
+          }
+        };
+      };
+      await transactionComplete(transaction);
+      return result;
     },
   };
 }

@@ -69,6 +69,10 @@ _Avoid_: Attempt, batch, recipe
 The day the baker made the dough of a bake. It defaults to the day the bake is saved, and the baker can pick another.
 _Avoid_: Created date
 
+**Backup**:
+One JSON file holding the whole history: every bake and its comments. Exporting downloads one; importing merges one into the history, skipping bakes that already exist.
+_Avoid_: Dump, snapshot
+
 **Comment**:
 A timestamped note the baker attaches to a bake, e.g. how the dough behaved or how the pizza turned out.
 _Avoid_: Note, review
