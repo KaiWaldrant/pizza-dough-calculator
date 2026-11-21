@@ -30,7 +30,7 @@ const defaults: Fields = {
   temperature: "20",
 };
 
-/** The form as a saved Bake left it, so the baker can carry on from their last dough. */
+/** The form as a saved Bake left it, so the baker can start from that Bake's formula. */
 const fieldsFrom = ({ input, fermentation }: Bake): Fields => ({
   ...defaults,
   ...(input.mode === "byDoughBalls"
