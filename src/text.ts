@@ -1,3 +1,7 @@
+import type { ImportResult } from "./bakes/backup";
+
+const count = (n: number, noun: string) => `${n} ${noun}${n === 1 ? "" : "s"}`;
+
 // All user-facing text lives here, so a translation can be added later
 // without hunting through components.
 export const text = {
@@ -55,6 +59,16 @@ export const text = {
     bakeAgain: "Bake again",
     delete: "Delete",
     confirmDelete: "Delete this bake? This can't be undone.",
+    exportHistory: "Export",
+    importHistory: "Import",
+    backupFileName: (date: string) => `pizza-dough-bakes-${date}.json`,
+    imported: ({ bakesAdded, bakesSkipped, commentsAdded }: ImportResult) =>
+      `Added ${count(bakesAdded, "bake")} and ${count(commentsAdded, "comment")}, ` +
+      `skipped ${count(bakesSkipped, "bake")}.`,
+    notABackup: "This file isn't a Bake history backup. Nothing was imported.",
+    otherVersion: "This backup comes from a different version of the app, so it can't be read. Nothing was imported.",
+    importFailed: "The import failed. Nothing was imported.",
+    exportFailed: "The export failed.",
     comments: "Comments",
     comment: "Comment",
     addComment: "Add comment",

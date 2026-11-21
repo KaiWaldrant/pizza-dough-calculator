@@ -1,7 +1,8 @@
 import { IDBFactory } from "fake-indexeddb";
 import { describe, expect, it } from "vitest";
 import type { NewBake } from "./bake";
-import { openBakeRepository } from "./bakeRepository";
+import { parseBackup } from "./backup";
+import { type BakeRepository, openBakeRepository } from "./bakeRepository";
 import { tickingClock } from "./tickingClock";
 
 const newBake = (overrides: Partial<NewBake> = {}): NewBake => ({
@@ -146,6 +147,74 @@ describe("openBakeRepository", () => {
       const newer = await openRaw(factory, 3);
 
       expect(newer.version).toBe(3);
+    });
+  });
+  describe("backups", () => {
+    /** Exports and reads the export back through the JSON file format, as a download and later upload would. */
+    async function exportThroughFile(repository: BakeRepository) {
+      const parsed = parseBackup(JSON.stringify(await repository.exportBackup()));
+      if (!parsed.ok) throw new Error("export didn't parse");
+      return parsed.backup;
+    }
+
+    async function withHistory() {
+      const repository = openBakeRepository(new IDBFactory(), { now: tickingClock() });
+      const first = await repository.save(newBake({ bakeDate: "2026-11-01" }));
+      const second = await repository.save(newBake({ bakeDate: "2026-11-08" }));
+      await repository.addComment(first.id, "slack at 6 h");
+      await repository.addComment(first.id, "great oven spring");
+      await repository.addComment(second.id, "too salty");
+      return { repository, first, second };
+    }
+
+    it("imports an export into an empty database with identical Bakes and Comments", async () => {
+      const { repository, first, second } = await withHistory();
+      const empty = openBakeRepository(new IDBFactory());
+
+      const result = await empty.importBackup(await exportThroughFile(repository));
+
+      expect(result).toEqual({ bakesAdded: 2, bakesSkipped: 0, commentsAdded: 3 });
+      expect(await empty.list()).toEqual(await repository.list());
+      expect(await empty.listComments(first.id)).toEqual(await repository.listComments(first.id));
+      expect(await empty.listComments(second.id)).toEqual(await repository.listComments(second.id));
+    });
+
+    it("adds nothing when the same file is imported twice", async () => {
+      const { repository } = await withHistory();
+      const other = openBakeRepository(new IDBFactory());
+      const backup = await exportThroughFile(repository);
+      await other.importBackup(backup);
+
+      const result = await other.importBackup(backup);
+
+      expect(result).toEqual({ bakesAdded: 0, bakesSkipped: 2, commentsAdded: 0 });
+      expect(await other.list()).toHaveLength(2);
+    });
+
+    it("skips Bakes that exist but adds their new Comments", async () => {
+      const { repository, first } = await withHistory();
+      const other = openBakeRepository(new IDBFactory(), { now: tickingClock() });
+      await other.importBackup(await exportThroughFile(repository));
+      const later = await repository.addComment(first.id, "baked again from this");
+
+      const result = await other.importBackup(await exportThroughFile(repository));
+
+      expect(result).toEqual({ bakesAdded: 0, bakesSkipped: 2, commentsAdded: 1 });
+      expect((await other.listComments(first.id)).at(-1)).toEqual(later);
+    });
+
+    it("changes nothing when an import fails partway", async () => {
+      const repository = openBakeRepository(new IDBFactory());
+      const existing = await repository.save(newBake());
+      const fine = { ...newBake(), id: "fine", savedAt: "2026-11-01T12:00:00.000Z" };
+      // IndexedDB can't store a Bake without an id; parseBackup never lets one through.
+      const broken = { ...fine, id: undefined as unknown as string };
+
+      await expect(
+        repository.importBackup({ schemaVersion: 1, bakes: [fine, broken], comments: [] }),
+      ).rejects.toThrow();
+
+      expect(await repository.list()).toEqual([existing]);
     });
   });
 });
