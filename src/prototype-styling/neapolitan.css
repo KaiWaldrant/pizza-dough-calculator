@@ -1,0 +1,183 @@
+/* PROTOTYPE (issue #23), throwaway. Direction A: Neapolitan.
+   Tomato red band header, pill tabs, two-column form, results as one big cream card. */
+@import "@fontsource/fredoka/latin-500.css";
+@import "@fontsource/fredoka/latin-600.css";
+
+:root {
+  --bg: #fbf6ec;
+  --surface: #fffdf8;
+  --text: #2b1d14;
+  --muted: #6b5a4c;
+  --accent: #c8321f; /* tomato */
+  --on-accent: #fffaf0;
+  --basil: #2f6b3a;
+  --border: #e6d9c4;
+  --error: #b00020;
+  --warning: #8a5a00;
+  --warning-bg: #fff3d6;
+  --focus: #2f6b3a;
+  color-scheme: light dark;
+  font-family: system-ui, sans-serif;
+  line-height: 1.45;
+  background: var(--bg);
+  color: var(--text);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1d1612;
+    --surface: #2a201a;
+    --text: #f5ebdd;
+    --muted: #c3b2a0;
+    --accent: #ff7a5c;
+    --on-accent: #1d1612;
+    --basil: #8fd19c;
+    --border: #4a3a2f;
+    --error: #ff8a95;
+    --warning: #ffcf70;
+    --warning-bg: #3a2c10;
+    --focus: #8fd19c;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+main { max-width: 32rem; margin: 0 auto; padding: 0 1rem 2rem; }
+
+main > h1 {
+  font-family: "Fredoka", system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 2rem;
+  margin: 0 -1rem;
+  padding: 1.25rem 1rem 2.25rem;
+  background: var(--accent);
+  color: var(--on-accent);
+  border-radius: 0 0 1.5rem 1.5rem;
+  letter-spacing: 0.01em;
+}
+main > h1::before { content: "● "; color: var(--basil); filter: brightness(1.6); }
+
+h2, h3, caption, legend { font-family: "Fredoka", system-ui, sans-serif; font-weight: 500; }
+
+nav {
+  display: flex;
+  gap: 0.25rem;
+  margin: -1.5rem auto 1.5rem;
+  padding: 0.25rem;
+  width: fit-content;
+  background: var(--surface);
+  border-radius: 999px;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.15);
+}
+nav button {
+  min-height: 44px;
+  padding: 0 1.25rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-weight: 600;
+}
+nav button[aria-current="page"] { background: var(--accent); color: var(--on-accent); }
+
+form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem 1rem; }
+form > *:not(div) { grid-column: 1 / -1; }
+form > div, form > label { display: grid; gap: 0.25rem; align-content: start; font-weight: 500; }
+
+fieldset { display: flex; gap: 0.5rem; border: 0; padding: 0; margin: 0; min-inline-size: 0; }
+legend { padding: 0; margin-bottom: 0.4rem; font-size: 1.1rem; }
+fieldset label {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-height: 44px;
+  border-radius: 999px;
+  border: 2px solid var(--border);
+  background: var(--surface);
+  font-weight: 600;
+  white-space: nowrap;
+}
+fieldset label:has(input:checked) { background: var(--basil); border-color: var(--basil); color: var(--surface); }
+fieldset input { accent-color: var(--basil); width: auto; min-height: 0; }
+
+input, select, textarea {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 0.5rem 0.75rem;
+  border: 2px solid var(--border);
+  border-radius: 0.75rem;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+}
+
+button {
+  min-height: 44px;
+  padding: 0 1.25rem;
+  border: 0;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--on-accent);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+button:disabled { opacity: 0.45; cursor: default; }
+
+[aria-invalid="true"] { border-color: var(--error); }
+[aria-invalid="true"] + span { color: var(--error); font-size: 0.9rem; font-weight: 600; }
+[aria-invalid="true"] + span::before { content: "✕ "; }
+[role="note"] {
+  color: var(--warning);
+  background: var(--warning-bg);
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.75rem;
+}
+[role="note"]::before { content: "⚠ "; }
+form > p { margin: 0; color: var(--muted); }
+
+/* Results: one big card with the dough weight as the headline */
+table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin-top: 1rem;
+  background: var(--surface);
+  border: 2px solid var(--accent);
+  border-radius: 1.25rem;
+  padding: 0.5rem 1rem 1rem;
+  font-variant-numeric: tabular-nums;
+}
+caption { text-align: left; font-size: 1.25rem; padding: 0 0 0.5rem; color: var(--accent); }
+thead { display: none; }
+th, td { padding: 0.5rem 0; border-bottom: 1px dashed var(--border); font-size: 1.1rem; }
+th { text-align: left; font-weight: 500; }
+td { text-align: right; font-weight: 700; }
+tbody tr:nth-child(5) th, tbody tr:nth-child(5) td { font-size: 1.5rem; color: var(--accent); border-bottom: 0; }
+
+dl { display: grid; grid-template-columns: auto 1fr; gap: 0.25rem 1rem; }
+dl > div { display: contents; }
+dt { color: var(--muted); }
+dd { margin: 0; font-weight: 600; }
+
+ul { list-style: none; padding: 0; display: grid; gap: 0.5rem; }
+section ul li > button:has(time:first-child) {
+  width: 100%;
+  text-align: left;
+  border-radius: 1rem;
+  background: var(--surface);
+  color: var(--text);
+  border: 2px solid var(--border);
+  padding: 0.75rem 1rem;
+  font-weight: 500;
+}
+section ul li > button > time { color: var(--accent); font-weight: 700; display: block; }
+section form { display: grid; grid-template-columns: 1fr; }
+textarea { min-height: 5rem; }
+
+footer { max-width: 32rem; margin: 0 auto 1rem; padding: 0 1rem; font-size: 0.75rem; color: var(--muted); }

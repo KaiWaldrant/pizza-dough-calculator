@@ -1,0 +1,167 @@
+/* PROTOTYPE (issue #23), throwaway. Direction B: Bakery.
+   Flour-white paper, centred serif wordmark between rules, underlined text-link nav,
+   recipe-card form (label left, input right), results as an ingredient list with dotted leaders. */
+@import "@fontsource/fraunces/latin-400.css";
+@import "@fontsource/fraunces/latin-700.css";
+
+:root {
+  --bg: #f4efe6;
+  --paper: #fffcf5;
+  --text: #33261a;
+  --muted: #6f5d4b;
+  --accent: #8a4b1c; /* crust */
+  --on-accent: #fffcf5;
+  --rule: #d8c8ae;
+  --error: #a3001a;
+  --warning: #7a4f00;
+  --focus: #8a4b1c;
+  color-scheme: light dark;
+  font-family: system-ui, sans-serif;
+  line-height: 1.5;
+  background: var(--bg);
+  color: var(--text);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #17130f;
+    --paper: #221c16;
+    --text: #efe5d6;
+    --muted: #bcae9b;
+    --accent: #e3a56c;
+    --on-accent: #17130f;
+    --rule: #4b3f32;
+    --error: #ff8f9c;
+    --warning: #f3c56a;
+    --focus: #e3a56c;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; padding: 1rem 0.5rem; }
+:focus-visible { outline: 2px dashed var(--focus); outline-offset: 3px; }
+
+main {
+  max-width: 32rem;
+  margin: 0 auto;
+  padding: 1.5rem 1.25rem 2rem;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  box-shadow: 0 1px 0 var(--rule), 0 8px 24px rgb(60 40 20 / 0.08);
+}
+
+main > h1 {
+  font-family: "Fraunces", Georgia, serif;
+  font-weight: 700;
+  font-size: 2.1rem;
+  text-align: center;
+  margin: 0 0 0.25rem;
+  padding: 0.5rem 0;
+  border-top: 3px double var(--rule);
+  border-bottom: 3px double var(--rule);
+  color: var(--accent);
+}
+h2, h3, caption, legend { font-family: "Fraunces", Georgia, serif; font-weight: 400; }
+h2 { font-size: 1.5rem; text-align: center; font-style: italic; }
+
+nav { display: flex; justify-content: center; gap: 1.5rem; margin-bottom: 1.5rem; }
+nav button {
+  min-height: 44px;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font-family: "Fraunces", Georgia, serif;
+  font-size: 1.1rem;
+  text-decoration: underline transparent;
+  text-underline-offset: 6px;
+  text-decoration-thickness: 2px;
+  cursor: pointer;
+}
+nav button[aria-current="page"] { color: var(--accent); text-decoration-color: var(--accent); }
+
+/* Recipe card: label left, value right, ruled lines */
+form > div, form > label {
+  display: grid;
+  grid-template-columns: 1fr 7rem;
+  align-items: center;
+  gap: 0 1rem;
+  padding: 0.25rem 0;
+  border-bottom: 1px solid var(--rule);
+}
+form > div > span { grid-column: 1 / -1; }
+
+fieldset { border: 0; padding: 0; margin: 0 0 1rem; display: flex; justify-content: center; gap: 1.5rem; }
+legend { width: 100%; text-align: center; font-style: italic; color: var(--muted); margin-bottom: 0.25rem; }
+fieldset label { display: flex; align-items: center; gap: 0.4rem; min-height: 44px; }
+fieldset input { accent-color: var(--accent); width: 1.2rem; height: 1.2rem; }
+
+input, select, textarea {
+  min-height: 44px;
+  padding: 0.25rem 0.5rem;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-family: "Fraunces", Georgia, serif;
+  font-size: 1.1rem;
+  text-align: right;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+input:hover, select:hover { border-bottom-color: var(--rule); }
+input[type="date"], select { text-align: left; }
+
+button {
+  min-height: 44px;
+  padding: 0 1rem;
+  border: 1px solid var(--accent);
+  border-radius: 2px;
+  background: var(--paper);
+  color: var(--accent);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+form > p:last-child button, section > p:last-child button:nth-child(2), section form button {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+button:disabled { opacity: 0.4; cursor: default; }
+
+[aria-invalid="true"] { border-bottom-color: var(--error); }
+[aria-invalid="true"] + span { color: var(--error); font-style: italic; font-size: 0.9rem; }
+[aria-invalid="true"] + span::before { content: "✕ "; font-style: normal; }
+[role="note"] { color: var(--warning); font-style: italic; border-left: 3px solid var(--warning); padding-left: 0.75rem; }
+[role="note"]::before { content: "⚠ "; font-style: normal; }
+form > p { color: var(--muted); font-size: 0.95rem; }
+
+/* Results: ingredient list with dotted leaders */
+table { width: 100%; border-collapse: collapse; margin: 1.5rem 0 1rem; font-variant-numeric: tabular-nums lining-nums; }
+caption { font-size: 1.3rem; font-style: italic; padding-bottom: 0.5rem; border-bottom: 3px double var(--rule); }
+thead { display: none; }
+tbody tr { display: flex; align-items: baseline; padding: 0.35rem 0; }
+tbody th { font-weight: 400; white-space: nowrap; order: 0; }
+tbody tr::after { content: ""; order: 1; flex: 1; margin: 0 0.4rem; border-bottom: 2px dotted var(--muted); opacity: 0.6; }
+tbody td { order: 2; text-align: right; font-family: "Fraunces", Georgia, serif; font-size: 1.15rem; }
+tbody tr:nth-child(5) { border-top: 1px solid var(--rule); margin-top: 0.25rem; font-weight: 700; }
+
+dl { margin: 0; }
+dl > div { display: flex; justify-content: space-between; gap: 1rem; padding: 0.3rem 0; border-bottom: 1px solid var(--rule); }
+dt { color: var(--muted); }
+dd { margin: 0; font-family: "Fraunces", Georgia, serif; text-align: right; }
+
+ul { list-style: none; padding: 0; margin: 0; }
+section ul li { border-bottom: 1px solid var(--rule); padding: 0.25rem 0; }
+section ul li > button:has(time:first-child) {
+  width: 100%;
+  border: 0;
+  background: none;
+  color: var(--text);
+  text-align: left;
+  font-weight: 400;
+  padding: 0.5rem 0;
+}
+section ul li > button > time { font-family: "Fraunces", Georgia, serif; color: var(--accent); margin-right: 0.5rem; }
+section form { display: grid; gap: 0.5rem; }
+section form label { display: block; border: 0; }
+textarea { text-align: left; border: 1px solid var(--rule); min-height: 5rem; font-family: system-ui, sans-serif; }
+
+footer { max-width: 32rem; margin: 0.75rem auto; text-align: center; font-size: 0.75rem; color: var(--muted); font-style: italic; }

@@ -1,0 +1,192 @@
+/* PROTOTYPE (issue #23), throwaway. Direction C: Clean modern.
+   Neutral greys + one strong accent, left-aligned compact wordmark, nav as a bottom tab bar (phone app),
+   large stacked inputs, results as a grid of tiles. */
+@import "@fontsource/space-grotesk/latin-500.css";
+@import "@fontsource/space-grotesk/latin-700.css";
+
+:root {
+  --bg: #f5f5f4;
+  --surface: #ffffff;
+  --text: #18181b;
+  --muted: #5f5f66;
+  --accent: #e4572e;
+  --accent-text: #b83a14; /* accent dark enough for text on white (AA) */
+  --on-accent: #ffffff;
+  --border: #e4e4e7;
+  --error: #c0002b;
+  --warning: #8a5300;
+  --warning-bg: #fff4e0;
+  --focus: #2563eb;
+  color-scheme: light dark;
+  font-family: system-ui, sans-serif;
+  line-height: 1.45;
+  background: var(--bg);
+  color: var(--text);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0f0f11;
+    --surface: #1b1b1f;
+    --text: #f4f4f5;
+    --muted: #a1a1aa;
+    --accent: #ff7a50;
+    --accent-text: #ff9a78;
+    --on-accent: #0f0f11;
+    --border: #2e2e33;
+    --error: #ff8095;
+    --warning: #ffc266;
+    --warning-bg: #2d2210;
+    --focus: #7aa7ff;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+main { max-width: 32rem; margin: 0 auto; padding: 1rem 1rem 6rem; }
+
+main > h1 {
+  font-family: "Space Grotesk", system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 1.4rem;
+  letter-spacing: -0.02em;
+  margin: 0.5rem 0 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+main > h1::before {
+  content: "";
+  width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: inset 0 0 0 3px var(--surface), 0 0 0 2px var(--accent);
+}
+h2, h3, caption, legend { font-family: "Space Grotesk", system-ui, sans-serif; font-weight: 700; letter-spacing: -0.01em; }
+
+/* Bottom tab bar */
+nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10;
+  display: flex;
+  justify-content: center;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+nav button {
+  flex: 1;
+  max-width: 16rem;
+  min-height: 56px;
+  border: 0;
+  border-top: 3px solid transparent;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+nav button[aria-current="page"] { color: var(--accent-text); border-top-color: var(--accent); }
+
+form > div, form > label { display: grid; gap: 0.35rem; margin-bottom: 1rem; font-size: 0.85rem; font-weight: 600; color: var(--muted); }
+
+fieldset {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  border: 1px solid var(--border);
+  border-radius: 0.6rem;
+  padding: 0;
+  margin: 0 0 1.25rem;
+  overflow: hidden;
+  background: var(--surface);
+}
+legend { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+fieldset label { display: flex; align-items: center; justify-content: center; min-height: 48px; font-weight: 600; cursor: pointer; }
+fieldset label:has(input:checked) { background: var(--text); color: var(--bg); }
+fieldset input { position: absolute; opacity: 0; }
+fieldset label:has(input:focus-visible) { outline: 2px solid var(--focus); outline-offset: -4px; }
+
+input, select, textarea {
+  min-height: 48px;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 0.6rem;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 1.1rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+button {
+  min-height: 44px;
+  padding: 0 1rem;
+  border: 1px solid var(--border);
+  border-radius: 0.6rem;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+form > p:last-child button, section > p:last-child button:nth-child(2), section form button {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+}
+button:disabled { opacity: 0.4; cursor: default; }
+
+[aria-invalid="true"] { border-color: var(--error); box-shadow: 0 0 0 1px var(--error); }
+[aria-invalid="true"] + span { color: var(--error); font-weight: 600; }
+[aria-invalid="true"] + span::before { content: "✕ "; }
+[role="note"] { color: var(--warning); background: var(--warning-bg); padding: 0.6rem 0.8rem; border-radius: 0.6rem; font-size: 0.9rem; }
+[role="note"]::before { content: "⚠ "; }
+form > p { color: var(--muted); font-size: 0.9rem; }
+
+/* Results: tiles */
+table { width: 100%; margin: 1.5rem 0 1rem; font-variant-numeric: tabular-nums; }
+caption { text-align: left; font-size: 1.1rem; padding-bottom: 0.5rem; }
+thead { display: none; }
+tbody { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+tbody tr {
+  display: flex;
+  flex-direction: column-reverse;
+  justify-content: flex-end;
+  padding: 0.75rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+}
+tbody th { font-size: 0.8rem; font-weight: 600; color: var(--muted); text-align: left; }
+tbody td { font-family: "Space Grotesk", system-ui, sans-serif; font-size: 1.6rem; font-weight: 700; text-align: left; letter-spacing: -0.02em; }
+tbody tr:nth-child(5) { grid-column: 1 / -1; grid-row: 1; background: var(--text); border-color: var(--text); }
+tbody tr:nth-child(5) th { color: var(--bg); opacity: 0.75; }
+tbody tr:nth-child(5) td { color: var(--bg); font-size: 2.2rem; }
+
+dl { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+dl > div { background: var(--surface); border: 1px solid var(--border); border-radius: 0.6rem; padding: 0.5rem 0.75rem; }
+dt { font-size: 0.8rem; color: var(--muted); font-weight: 600; }
+dd { margin: 0; font-weight: 600; }
+
+ul { list-style: none; padding: 0; display: grid; gap: 0.5rem; }
+section ul li > button:has(time:first-child) {
+  width: 100%;
+  text-align: left;
+  padding: 0.75rem 1rem;
+  font-weight: 500;
+  display: flex;
+  justify-content: space-between;
+  flex-direction: row-reverse;
+  gap: 1rem;
+}
+section ul li > button > time { color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+section form { display: grid; gap: 0.5rem; }
+textarea { min-height: 5rem; font-size: 1rem; }
+
+footer { max-width: 32rem; margin: -5rem auto 6rem; padding: 0 1rem; font-size: 0.75rem; color: var(--muted); }
