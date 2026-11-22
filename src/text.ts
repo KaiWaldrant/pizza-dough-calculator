@@ -6,6 +6,9 @@ const count = (n: number, noun: string) => `${n} ${noun}${n === 1 ? "" : "s"}`;
 // without hunting through components.
 export const text = {
   appTitle: "Pizza Dough Calculator",
+  version: (version: string) => `Version ${version}`,
+  /** The version shown when the build sets none, e.g. in development. */
+  devVersion: "dev",
   calculator: {
     mode: "Calculate",
     byDoughBalls: "By dough balls",

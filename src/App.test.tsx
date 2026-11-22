@@ -20,6 +20,7 @@ async function setField(label: string, value: string) {
 
 afterEach(() => {
   vi.restoreAllMocks();
+  vi.unstubAllEnvs();
 });
 
 async function openSavedBake(repository = newRepository(), comments: string[] = []) {
@@ -35,6 +36,20 @@ describe("App", () => {
   it("shows the app title from the text module", async () => {
     render(<App repository={newRepository()} />);
     expect(screen.getByRole("heading", { level: 1 }).textContent).toBe(text.appTitle);
+  });
+
+  it("shows the app version from the build in the footer", () => {
+    vi.stubEnv("VITE_APP_VERSION", "v0.0.1");
+    render(<App repository={newRepository()} />);
+
+    expect(screen.getByRole("contentinfo").textContent).toBe("Version v0.0.1");
+  });
+
+  it("shows dev as the version when the build sets none", () => {
+    vi.stubEnv("VITE_APP_VERSION", "");
+    render(<App repository={newRepository()} />);
+
+    expect(screen.getByRole("contentinfo").textContent).toBe("Version dev");
   });
 
   it("saves a Bake from the calculator and lists it in the history", async () => {
