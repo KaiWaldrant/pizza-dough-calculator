@@ -5,5 +5,5 @@ Even though the app is self-hosted in a container, Bakes and their Comments are 
 ## Consequences
 
 - History doesn't sync between devices or browsers.
-- Browser storage is kept separately for each address, so the app must be used through one canonical address. HAProxy redirects the bare IP address to the DNS name, so both addresses work but only one history exists.
+- Browser storage is kept separately for each address, so the app must be used through one canonical address: the DNS name behind the reverse proxy, never the IP and port.
 - Moving to server-side storage later (e.g. SQLite behind a small API) means migrating existing browser data through the JSON export.
