@@ -1,0 +1,5 @@
+node_modules
+dist
+.git
+# Local editor and agent settings stay out of the image.
+.claude

@@ -18,38 +18,42 @@ export function App({ repository }: { repository: BakeRepository }) {
   const [view, setView] = useState<View>({ name: "calculator" });
 
   return (
-    <main>
-      <h1>{text.appTitle}</h1>
-      <nav aria-label={text.navigation.label}>
-        {(["calculator", "history"] as const).map((option) => (
-          <button
-            key={option}
-            type="button"
-            aria-current={view.name === option ? "page" : undefined}
-            onClick={() => setView(option === "calculator" ? { name: "calculator" } : { name: "history" })}
-          >
-            {text.navigation[option]}
-          </button>
-        ))}
-      </nav>
-      {view.name === "calculator" &&
-        (view.from ? (
-          <SavingCalculator key={view.from.id} repository={repository} startingBake={view.from} />
-        ) : (
-          <LatestCalculator repository={repository} />
-        ))}
-      {view.name === "history" && (
-        <History repository={repository} onOpen={(id) => setView({ name: "bake", id })} />
-      )}
-      {view.name === "bake" && (
-        <BakeDetail
-          repository={repository}
-          id={view.id}
-          onBack={() => setView({ name: "history" })}
-          onBakeAgain={(bake) => setView({ name: "calculator", from: bake })}
-        />
-      )}
-    </main>
+    <>
+      <main>
+        <h1>{text.appTitle}</h1>
+        <nav aria-label={text.navigation.label}>
+          {(["calculator", "history"] as const).map((option) => (
+            <button
+              key={option}
+              type="button"
+              aria-current={view.name === option ? "page" : undefined}
+              onClick={() => setView(option === "calculator" ? { name: "calculator" } : { name: "history" })}
+            >
+              {text.navigation[option]}
+            </button>
+          ))}
+        </nav>
+        {view.name === "calculator" &&
+          (view.from ? (
+            <SavingCalculator key={view.from.id} repository={repository} startingBake={view.from} />
+          ) : (
+            <LatestCalculator repository={repository} />
+          ))}
+        {view.name === "history" && (
+          <History repository={repository} onOpen={(id) => setView({ name: "bake", id })} />
+        )}
+        {view.name === "bake" && (
+          <BakeDetail
+            repository={repository}
+            id={view.id}
+            onBack={() => setView({ name: "history" })}
+            onBakeAgain={(bake) => setView({ name: "calculator", from: bake })}
+          />
+        )}
+      </main>
+      {/* Set at build time, e.g. by the Docker build's APP_VERSION. */}
+      <footer>{text.version(import.meta.env.VITE_APP_VERSION || text.devVersion)}</footer>
+    </>
   );
 }
 

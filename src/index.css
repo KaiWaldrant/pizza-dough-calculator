@@ -49,3 +49,11 @@ td {
 td {
   text-align: right;
 }
+
+footer {
+  max-width: 32rem;
+  margin: 0 auto 1rem;
+  padding: 0 1rem;
+  font-size: 0.75rem;
+  color: gray;
+}
