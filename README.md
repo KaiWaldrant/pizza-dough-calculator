@@ -21,5 +21,5 @@ services:
 ```
 
 - **HTTPS** is not handled by the container. Put a reverse proxy in front of it.
-- **Use one address.** Bake history is stored in the browser, separately for each address, so history saved at `http://192.168.1.10:8080` doesn't show up at `https://pizza.example.com`. Redirect the IP (and any other names) to the one DNS name.
+- **Use one address.** Bake history is stored in the browser, separately for each address, so history saved at `http://192.168.1.10:8080` doesn't show up at `https://pizza.example.com`. Always open the app through its one DNS name, never the IP and port.
 - **Backups:** history lives only in the browser. Export a Backup (a JSON file) from the app, and import it to restore.
