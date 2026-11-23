@@ -173,7 +173,7 @@ export function Calculator({
       {overriddenYeast !== null && (
         <p>
           <strong>{t.overridden}</strong>{" "}
-          <button type="button" onClick={() => setOverriddenYeast(null)}>
+          <button type="button" className="secondary" onClick={() => setOverriddenYeast(null)}>
             {t.useSuggestion}
           </button>
         </p>

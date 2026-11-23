@@ -28,6 +28,7 @@ export function Comments({ repository, bakeId }: { repository: BakeRepository; b
               <time dateTime={comment.createdAt}>{t.commentedAt(comment.createdAt)}</time> {comment.body}{" "}
               <button
                 type="button"
+                className="secondary"
                 onClick={async () => {
                   if (!window.confirm(t.confirmDeleteComment)) return;
                   await repository.deleteComment(comment.id);

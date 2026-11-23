@@ -9,7 +9,6 @@ export function Results({ weights }: { weights: ReturnType<typeof roundForDispla
     [t.water, weights.water],
     [t.saltResult, weights.salt],
     [t.yeastResult, weights.yeast],
-    [t.doughWeight, weights.doughWeight],
   ];
   const { doughBalls } = weights;
   return (
@@ -28,6 +27,10 @@ export function Results({ weights }: { weights: ReturnType<typeof roundForDispla
             <td>{t.grams(grams)}</td>
           </tr>
         ))}
+        <tr className="dough-weight">
+          <th scope="row">{t.doughWeight}</th>
+          <td>{t.grams(weights.doughWeight)}</td>
+        </tr>
         {doughBalls && (
           <>
             <tr>

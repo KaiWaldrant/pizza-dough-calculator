@@ -55,7 +55,7 @@ export function BakeDetail(props: {
       <Results weights={roundForDisplay(weights)} />
       <Comments key={bake.id} repository={repository} bakeId={bake.id} />
       <p>
-        <button type="button" onClick={props.onBack}>
+        <button type="button" className="secondary" onClick={props.onBack}>
           {t.backToHistory}
         </button>{" "}
         <button type="button" onClick={() => props.onBakeAgain(bake)}>
@@ -63,6 +63,7 @@ export function BakeDetail(props: {
         </button>{" "}
         <button
           type="button"
+          className="secondary"
           onClick={async () => {
             if (!window.confirm(t.confirmDelete)) return;
             await repository.delete(bake.id);
