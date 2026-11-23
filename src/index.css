@@ -1,59 +1,373 @@
+/* Neapolitan look (issue #23): tomato, basil and cream. Fonts are bundled, never loaded from a CDN. */
+@import "@fontsource/fredoka/latin-500.css";
+@import "@fontsource/fredoka/latin-600.css";
+
 :root {
+  --bg: #fbf6ec;
+  --surface: #fffdf8;
+  --text: #2b1d14;
+  --muted: #6b5a4c;
+  --accent: #c8321f;
+  --on-accent: #fffaf0;
+  --basil: #2f6b3a;
+  --on-basil: #fffdf8;
+  --border: #e6d9c4;
+  --error: #b00020;
+  --warning: #7a4f00;
+  --warning-bg: #fff3d6;
+  --focus: #2f6b3a;
+
+  --display: "Fredoka", system-ui, sans-serif;
+  --radius: 0.75rem;
+  --pill: 999px;
+  --touch: 44px;
+
+  color-scheme: light dark;
   font-family: system-ui, sans-serif;
-  line-height: 1.4;
+  line-height: 1.45;
+  background: var(--bg);
+  color: var(--text);
 }
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1d1612;
+    --surface: #2a201a;
+    --text: #f5ebdd;
+    --muted: #c3b2a0;
+    --accent: #ff7a5c;
+    --on-accent: #1d1612;
+    --basil: #8fd19c;
+    --on-basil: #1d1612;
+    --border: #4a3a2f;
+    --error: #ff8a95;
+    --warning: #ffcf70;
+    --warning-bg: #3a2c10;
+    --focus: #8fd19c;
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* Layout */
 
 main {
   max-width: 32rem;
-  margin: 2rem auto;
-  padding: 0 1rem;
+  margin: 0 auto;
+  padding: 0 1rem 2rem;
+}
+
+h2,
+h3,
+caption,
+legend {
+  font-family: var(--display);
+  font-weight: 500;
+}
+
+/* Wordmark: the title in a tomato band */
+main > h1 {
+  margin: 0 -1rem;
+  padding: 1.25rem 1rem 2.25rem;
+  border-radius: 0 0 1.5rem 1.5rem;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: 2rem;
+  line-height: 1.15;
+}
+
+/* Navigation: pill tabs overlapping the band */
+nav {
+  display: flex;
+  gap: 0.25rem;
+  width: fit-content;
+  margin: -1.5rem auto 1.5rem;
+  padding: 0.25rem;
+  border-radius: var(--pill);
+  background: var(--surface);
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.15);
+}
+
+nav button {
+  background: transparent;
+  color: var(--text);
+}
+
+nav button[aria-current="page"] {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+/* Controls */
+
+input,
+select,
+textarea {
+  width: 100%;
+  min-width: 0;
+  min-height: var(--touch);
+  padding: 0.5rem 0.75rem;
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+}
+
+textarea {
+  min-height: 5rem;
+}
+
+button {
+  min-height: var(--touch);
+  padding: 0 1.25rem;
+  border: 2px solid transparent;
+  border-radius: var(--pill);
+  background: var(--accent);
+  color: var(--on-accent);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Back, delete and the like: outlined, so they never look like the main action or an error. */
+button.secondary {
+  border-color: var(--accent);
+  background: transparent;
+  color: var(--text);
+}
+
+::file-selector-button {
+  min-height: var(--touch);
+  margin-right: 0.75rem;
+  padding: 0 1.25rem;
+  border: 2px solid var(--accent);
+  border-radius: var(--pill);
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+/* Calculator form: two columns of number fields, everything else full width */
+form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem 1rem;
+}
+
+form > :not(div) {
+  grid-column: 1 / -1;
 }
 
 form > div,
 form > label {
   display: grid;
+  align-content: start;
   gap: 0.25rem;
-  margin-bottom: 0.75rem;
+  font-weight: 500;
 }
 
+form > p {
+  margin: 0;
+  color: var(--muted);
+}
+
+/* Calculation mode: two pill toggles */
 fieldset {
   display: flex;
-  gap: 1rem;
-  margin-bottom: 0.75rem;
+  gap: 0.5rem;
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
 }
 
+legend {
+  margin-bottom: 0.4rem;
+  padding: 0;
+  font-size: 1.1rem;
+}
+
+fieldset label {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-height: var(--touch);
+  border: 2px solid var(--border);
+  border-radius: var(--pill);
+  background: var(--surface);
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+fieldset label:has(input:checked) {
+  border-color: var(--basil);
+  background: var(--basil);
+  color: var(--on-basil);
+}
+
+fieldset input {
+  width: auto;
+  min-height: 0;
+  accent-color: var(--on-basil);
+}
+
+/* Errors and warnings: never just colour */
 [aria-invalid="true"] {
-  outline: 2px solid crimson;
+  border-color: var(--error);
 }
 
 [aria-invalid="true"] + span {
-  color: crimson;
+  color: var(--error);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+[aria-invalid="true"] + span::before {
+  content: "✕ ";
 }
 
 [role="note"] {
-  color: darkorange;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius);
+  background: var(--warning-bg);
+  color: var(--warning);
 }
 
+[role="note"]::before {
+  content: "⚠ ";
+}
+
+/* Results: one card, the dough weight as the headline */
 table {
   width: 100%;
-  border-collapse: collapse;
   margin-top: 1rem;
+  padding: 0.5rem 1rem 1rem;
+  border: 2px solid var(--accent);
+  border-radius: 1.25rem;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: var(--surface);
+  font-variant-numeric: tabular-nums;
+}
+
+caption {
+  padding: 0 0 0.5rem;
+  color: var(--accent);
+  font-size: 1.25rem;
+  text-align: left;
+}
+
+thead {
+  display: none;
 }
 
 th,
 td {
+  padding: 0.5rem 0;
+  border-bottom: 1px dashed var(--border);
+  font-size: 1.1rem;
+}
+
+th {
+  font-weight: 500;
   text-align: left;
-  padding: 0.25rem 0;
 }
 
 td {
+  font-weight: 700;
   text-align: right;
+}
+
+tr:last-child > * {
+  border-bottom: 0;
+}
+
+tr.dough-weight > * {
+  color: var(--accent);
+  font-size: 1.5rem;
+}
+
+/* Bake detail */
+dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.25rem 1rem;
+}
+
+dl > div {
+  display: contents;
+}
+
+dt {
+  color: var(--muted);
+}
+
+dd {
+  margin: 0;
+  font-weight: 600;
+}
+
+/* History list and comments */
+section ul {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0;
+  list-style: none;
+}
+
+/* A bake in the history list: a card */
+li > button:has(> time:first-child) {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-color: var(--border);
+  border-radius: 1rem;
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 500;
+  text-align: left;
+}
+
+li > button > time {
+  display: block;
+  color: var(--accent);
+  font-weight: 700;
+}
+
+section form {
+  grid-template-columns: minmax(0, 1fr);
 }
 
 footer {
   max-width: 32rem;
   margin: 0 auto 1rem;
   padding: 0 1rem;
+  color: var(--muted);
   font-size: 0.75rem;
-  color: gray;
 }
